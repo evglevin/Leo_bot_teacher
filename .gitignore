@@ -87,3 +87,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+.idea/
+Data/
+Data_archive/
+Subtitles/
+Subtitles_archive/
