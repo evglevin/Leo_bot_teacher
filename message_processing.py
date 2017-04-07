@@ -1,63 +1,9 @@
 import re
-import sqlite3
 from collections import Counter
 from string import punctuation
 from math import sqrt
 
-
-DATABASE_NAME = 'Data/new_database.sqlite'
-
-def db_connection(textH, textB, incert_in=False):
-    """
-
-    Initialize the connection to the database
-    and create the tables needed by the program
-
-    """
-
-    global incert
-    incert = incert_in
-    global connection
-    global cursor
-    # initialize the connection to the database
-    try:
-        connection = sqlite3.connect(DATABASE_NAME)
-        cursor = connection.cursor()
-        text = text_processing(textH, textB)
-        connection.close()
-        return text
-    except:
-        pass
-
-    # create the tables needed by the program
-    try:
-        # create the table containing the words
-        cursor.execute('''
-                CREATE TABLE words (
-                    word TEXT UNIQUE
-                )
-            ''')
-        # create the table containing the sentences
-        cursor.execute('''
-                CREATE TABLE sentences (
-                    sentence TEXT UNIQUE,
-                    used INT NOT NULL DEFAULT 0
-                )''')
-        # create association between weighted words and the next sentence
-        cursor.execute('''
-                CREATE TABLE associations (
-                    word_id INT NOT NULL,
-                    sentence_id INT NOT NULL,
-                    weight REAL NOT NULL)
-            ''')
-        cursor.execute('''
-                CREATE TABLE last_messages (
-                    chat_id INT NOT NULL,
-                    last_message TEXT UNIQUE)
-            ''')
-    except:
-        pass
-
+incert = False
 
 def get_id(entityName, text):
     """
@@ -68,8 +14,8 @@ def get_id(entityName, text):
 
     """
 
-    global connection
     global cursor
+
     tableName = entityName + 's'
     columnName = entityName
     cursor.execute('SELECT rowid FROM ' + tableName + ' WHERE ' + columnName + ' = ?', (text,))
@@ -97,9 +43,14 @@ def get_words(text):
     return Counter(wordsList).items()
 
 
-def text_processing(textH, textB):
+def text_processing(textH, textB, connection_in, cursor_in, incert_in = False):
     global connection
     global cursor
+    global incert
+
+    connection = connection_in
+    cursor = cursor_in
+    incert = incert_in
 
     B = textB
 
@@ -139,7 +90,4 @@ def text_processing(textH, textB):
     B = row[1]
     cursor.execute('UPDATE sentences SET used=used+1 WHERE rowid=?', (row[0],))
     connection.commit()
-
-    cursor.execute('UPDATE last_messages SET last_message=?  WHERE chat_id=?', (B, chat_id))
-    connection.commit()
-    return B
+    return cursor
